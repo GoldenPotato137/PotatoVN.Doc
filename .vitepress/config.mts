@@ -1,22 +1,23 @@
 import { defineConfig } from 'vitepress'
-import {
-  GitChangelog,
-  GitChangelogMarkdownSection,
-} from '@nolebase/vitepress-plugin-git-changelog/vite'
+// import {
+//   GitChangelog,
+//   GitChangelogMarkdownSection,
+// } from '@nolebase/vitepress-plugin-git-changelog/vite'
 import SideBar from "./SideBar";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  // 由于StackBlitz Web Publisher的git版本太老，不支持Git Changelog插件，本分支禁用Git Changelog插件
   // Git Changelog
   // https://nolebase-integrations.ayaka.io/pages/zh-CN/integrations/vitepress-plugin-git-changelog/
-  vite: {
-    plugins: [
-      GitChangelog({
-        repoURL: () => 'https://github.com/GoldenPotato137/PotatoVN.Doc',
-      }),
-      GitChangelogMarkdownSection(),
-    ],
-  },
+  // vite: {
+  //   plugins: [
+  //     GitChangelog({
+  //       repoURL: () => 'https://github.com/GoldenPotato137/PotatoVN.Doc',
+  //     }),
+  //     GitChangelogMarkdownSection(),
+  //   ],
+  // },
   
   title: "PotatoVN",
   description: "PotatoVN Official Website",
