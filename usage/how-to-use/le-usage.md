@@ -5,18 +5,15 @@ order: 5
 # LocaleEmulator支持
 
 ## STEP1
-选择游戏exe文件，选择LE菜单中的修改此程序配置
-
-![alt text](./images/le-usage/le-usage1.png)
+在游戏的`设置\游戏\LocaleEmulator 可执行文件路径`中点击`Go`按钮
+![alt text](./images/le-usage/image.png)
 ## STEP2
-点击建立快捷方式
-
-![alt text](./images/le-usage/le-usage2.png)
+选择LocaleEmulator根目录下的`LEProc.exe`文件
+![alt text](./images/le-usage/image-3.png)
+设置完成后会显示当前路径
+![alt text](./images/le-usage/image-1.png)
 ## STEP3
-快捷方式会生成在桌面上，把它剪切到游戏文件夹
-## STEP4
-回到软件，选择对应的游戏，右键开始游戏来清空之前的可运行文件选择，并选择快捷方式来启动游戏
-
-![alt text](./images/le-usage/le-usage3.png)
+在游戏界面勾选`转区运行游戏`选项即可在每次运行游戏时使用LocaleEmulator运行游戏
+![alt text](./images/le-usage/image-2.png)
 
 搞好啦，撒花~
