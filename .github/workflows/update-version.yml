@@ -1,9 +1,8 @@
 name: Update Version Information from PotatoVN
 
 on:
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
-# 关键：为工作流授予写入权限，以便能够推送（push）最终的提交
 permissions:
   contents: write
 
@@ -12,46 +11,39 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 步骤 1: 检出运行此工作流的仓库 (PotatoVN.doc)
     - name: Checkout PotatoVN.Doc repository
       uses: actions/checkout@v4
 
-    # 步骤 2: 克隆包含版本源文件的 PotatoVN 仓库
-    # 将其克隆到一个名为 'temp_potatovn' 的临时目录中
     - name: Clone PotatoVN source repository
       run: |
         git clone https://github.com/GoldenPotato137/PotatoVN.git temp_potatovn
 
-    # 步骤 3: 获取 'released' 分支的版本号
     - name: Get 'released' branch version
       id: released_version
-      # 正确的做法：使用 working-directory 确保所有命令都在克隆的仓库中执行
       working-directory: ./temp_potatovn
       run: |
-        # 切换到 released 分支。Git会自动从 origin/released 创建本地分支
         git checkout released
-        # 从 Package.appxmanifest 中提取版本号。
-        # 使用 sed 和正则表达式捕获组，一次性完成，更高效。
-        version=$(sed -n 's/.*Version="\([^"]*\)".*/\1/p' GalgameManager/Package.appxmanifest)
+        # 关键修正：使用更精确的 sed 命令，只匹配 <Identity> 标签中的 Version
+        # 's/^\s*<Identity.*Version="\([^"]*\)".*/\1/p'
+        #   ^          - 匹配行首
+        #   \s*        - 匹配零个或多个空格
+        #   <Identity - 精确匹配标签
+        # 这可以确保我们只拿到应用程序的主版本号
+        version=$(sed -n 's/^\s*<Identity.*Version="\([^"]*\)".*/\1/p' GalgameManager/Package.appxmanifest)
         echo "Found released version: $version"
-        # 将版本号设置为此步骤的输出，供后续步骤使用
         echo "version=$version" >> $GITHUB_OUTPUT
 
-    # 步骤 4: 获取 'flight-released' 分支的版本号
     - name: Get 'flight-released' branch version
       id: flight_released_version
-      # 同样，指定正确的工作目录
       working-directory: ./temp_potatovn
       run: |
-        # 切换到 flight-released 分支
         git checkout flight-released
-        version=$(sed -n 's/.*Version="\([^"]*\)".*/\1/p' GalgameManager/Package.appxmanifest)
+        # 同样使用修正后的精确 sed 命令
+        version=$(sed -n 's/^\s*<Identity.*Version="\([^"]*\)".*/\1/p' GalgameManager/Package.appxmanifest)
         echo "Found flight-released version: $version"
         echo "version=$version" >> $GITHUB_OUTPUT
         
-    # 步骤 5: 在 PotatoVN.doc 仓库中创建或更新 public/version.json
     - name: Create or Update version.json
-      # 此步骤没有 working-directory，因此它在项目的根目录 (PotatoVN.doc) 中执行
       run: |
         mkdir -p public
         cat > public/version.json << EOF
@@ -63,7 +55,6 @@ jobs:
         echo "Generated public/version.json:"
         cat public/version.json
 
-    # 步骤 6: 提交并推送更改到 PotatoVN.doc 仓库
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
@@ -71,7 +62,6 @@ jobs:
         
         git add public/version.json
         
-        # 检查是否有文件变动。如果没有，则不执行提交，避免产生空的提交记录。
         if git diff --staged --quiet; then
           echo "No changes to commit. version.json is up-to-date."
         else
@@ -80,9 +70,7 @@ jobs:
           echo "Changes have been committed and pushed."
         fi
         
-    # 步骤 7: (可选但推荐) 清理临时文件
     - name: Cleanup temporary repository
-      # always() 确保无论前面的步骤是否成功，都执行此清理步骤
       if: always()
       run: |
         rm -rf temp_potatovn
