@@ -18,19 +18,35 @@ jobs:
       run: |
         git clone https://github.com/GoldenPotato137/PotatoVN.git temp_potatovn
 
+    # 新增步骤：安装 xmlstarlet，这是一个健壮的XML处理工具
+    - name: Install xmlstarlet
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xmlstarlet
+
     - name: Get 'released' branch version
       id: released_version
       working-directory: ./temp_potatovn
       run: |
         git checkout released
-        # 关键修正：使用更精确的 sed 命令，只匹配 <Identity> 标签中的 Version
-        # 's/^\s*<Identity.*Version="\([^"]*\)".*/\1/p'
-        #   ^          - 匹配行首
-        #   \s*        - 匹配零个或多个空格
-        #   <Identity - 精确匹配标签
-        # 这可以确保我们只拿到应用程序的主版本号
-        version=$(sed -n 's/^\s*<Identity.*Version="\([^"]*\)".*/\1/p' GalgameManager/Package.appxmanifest)
+        
+        # 关键修正：使用 xmlstarlet 来解析 XML，而不是 sed
+        # 'xmlstarlet sel' -> select (查询)
+        # '-t' -> template (模板)
+        # '-v' -> value-of (提取值)
+        # "'/Package/Identity/@Version'" -> XPath 路径，表示：
+        #   从根节点 (/) 开始
+        #   找到 <Package> 元素
+        #   找到其下的 <Identity> 元素
+        #   提取 (@) 名为 Version 的属性值
+        version=$(xmlstarlet sel -t -v "/Package/Identity/@Version" GalgameManager/Package.appxmanifest)
+        
         echo "Found released version: $version"
+        # 增加一个检查，如果版本号为空则报错，防止静默失败
+        if [ -z "$version" ]; then
+          echo "Error: Could not extract version number."
+          exit 1
+        fi
         echo "version=$version" >> $GITHUB_OUTPUT
 
     - name: Get 'flight-released' branch version
@@ -38,9 +54,15 @@ jobs:
       working-directory: ./temp_potatovn
       run: |
         git checkout flight-released
-        # 同样使用修正后的精确 sed 命令
-        version=$(sed -n 's/^\s*<Identity.*Version="\([^"]*\)".*/\1/p' GalgameManager/Package.appxmanifest)
+        
+        # 同样使用健壮的 xmlstarlet
+        version=$(xmlstarlet sel -t -v "/Package/Identity/@Version" GalgameManager/Package.appxmanifest)
+
         echo "Found flight-released version: $version"
+        if [ -z "$version" ]; then
+          echo "Error: Could not extract version number."
+          exit 1
+        fi
         echo "version=$version" >> $GITHUB_OUTPUT
         
     - name: Create or Update version.json
