@@ -1,0 +1,74 @@
+name: Update Version Information
+
+on:
+  workflow_dispatch:  # Manual trigger
+  
+permissions: write-all
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout PotatoVN.Doc repository
+      uses: actions/checkout@v4
+        
+    - name: Clone PotatoVN main repository
+      run: |
+        git clone https://github.com/GoldenPotato137/PotatoVN.git temp-potatovn
+        cd temp-potatovn
+        
+    - name: Get released version
+      id: released_version
+      run: |
+        cd temp-potatovn
+        git checkout released
+        # Extract version from Package.appxmanifest
+        released_version=$(grep -o 'Version="[^"]*"' GalgameManager/Package.appxmanifest | sed 's/Version="//' | sed 's/"//')
+        echo "version=$released_version" >> $GITHUB_OUTPUT
+        echo "Released version: $released_version"
+        
+    - name: Get flight-released version
+      id: flight_released_version
+      run: |
+        cd temp-potatovn
+        git checkout flight-released
+        # Extract version from Package.appxmanifest
+        flight_released_version=$(grep -o 'Version="[^"]*"' GalgameManager/Package.appxmanifest | sed 's/Version="//' | sed 's/"//')
+        echo "version=$flight_released_version" >> $GITHUB_OUTPUT
+        echo "Flight-released version: $flight_released_version"
+        
+    - name: Create/Update version.json
+      run: |
+        # Create public directory if it doesn't exist
+        mkdir -p public
+        
+        # Create version.json with the extracted versions
+        cat > public/version.json << EOF
+        {
+          "released": "${{ steps.released_version.outputs.version }}",
+          "flight-released": "${{ steps.flight_released_version.outputs.version }}"
+        }
+        EOF
+        
+        echo "Created version.json:"
+        cat public/version.json
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        git add public/version.json
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update version information - Released: ${{ steps.released_version.outputs.version }}, Flight-released: ${{ steps.flight_released_version.outputs.version }}"
+          git push
+        fi
+        
+    - name: Cleanup
+      run: |
+        rm -rf temp-potatovn
