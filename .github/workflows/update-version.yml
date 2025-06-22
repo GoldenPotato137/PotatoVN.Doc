@@ -45,6 +45,18 @@ jobs:
         fi
         echo "version=$version" >> $GITHUB_OUTPUT
 
+    - name: Get msstore released version
+      id: msstore_released_version
+      run: |
+        pip install requests beautifulsoup4
+        version=$(python script/get-msstore-version.py)
+        echo "Found msstore released version: $version"
+        if [ -z "$version" ]; then
+          echo "Error: Could not extract version number from msstore."
+          exit 1
+        fi
+        echo "version=$version" >> $GITHUB_OUTPUT
+
     - name: Get 'flight-released' branch version
       id: flight_released_version
       working-directory: ./temp_potatovn
@@ -70,7 +82,8 @@ jobs:
         cat > public/version.json << EOF
         {
           "released": "${{ steps.released_version.outputs.version }}",
-          "flight-released": "${{ steps.flight_released_version.outputs.version }}"
+          "flight-released": "${{ steps.flight_released_version.outputs.version }}",
+          "released-msstore": "${{ steps.msstore_released_version.outputs.version }}"
         }
         EOF
         echo "Generated public/version.json:"
@@ -87,7 +100,7 @@ jobs:
         if git diff --staged --quiet; then
           echo "No changes to commit. version.json is up-to-date."
         else
-          git commit -m "chore(version): Update version.json" -m "Released: ${{ steps.released_version.outputs.version }}, Flight-released: ${{ steps.flight_released_version.outputs.version }}"
+          git commit -m "chore(version): Update version.json" -m "Released: ${{ steps.released_version.outputs.version }}, Flight-released: ${{ steps.flight_released_version.outputs.version }}, Released-msstore: ${{ steps.msstore_released_version.outputs.version }}"
           git push
           echo "Changes have been committed and pushed."
         fi
