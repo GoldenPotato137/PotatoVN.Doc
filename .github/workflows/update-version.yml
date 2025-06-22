@@ -99,10 +99,12 @@ jobs:
         
         if git diff --staged --quiet; then
           echo "No changes to commit. version.json is up-to-date."
+          echo "triggered=false" >> $GITHUB_OUTPUT
         else
           git commit -m "chore(version): Update version.json" -m "Released: ${{ steps.released_version.outputs.version }}, Flight-released: ${{ steps.flight_released_version.outputs.version }}, Released-msstore: ${{ steps.msstore_released_version.outputs.version }}"
           git push
           echo "Changes have been committed and pushed."
+          echo "triggered=true" >> $GITHUB_OUTPUT
         fi
         
     - name: Cleanup temporary repository
