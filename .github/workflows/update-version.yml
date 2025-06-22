@@ -77,6 +77,7 @@ jobs:
         cat public/version.json
 
     - name: Commit and push changes
+      id: push_changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
@@ -95,3 +96,11 @@ jobs:
       if: always()
       run: |
         rm -rf temp_potatovn
+
+    - name: Trigger the doc-build-deploy workflow
+      if: steps.push_changes.outputs.triggered == 'true'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Triggering the Build & Deploy workflow..."
+        gh workflow run doc-build-deploy.yml --ref main
