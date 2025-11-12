@@ -4,7 +4,7 @@ order: 1
 
 # 快速开始
 
-让我们们开始吧，制作你的第一个 PotatoVN 插件！
+让我们开始吧，制作你的第一个 PotatoVN 插件！
 
 ## 安装开发环境
 
@@ -22,7 +22,7 @@ order: 1
 接下来，使用 GitHub 模板生成一个插件项目，编译项目，并在应用中使用编译出来的插件。
 
 1. **从模板创建项目**:
-    访问 [PotatoVN.App.PluginBase 模板仓库](https://github.com/GoldenPotato137/PotatoVN.App.PluginBase) 并点击 "Use this template" -> "Create a new repository" 来创建一个你自己的插件项目。
+    访问 [PotatoVN.App.PluginBase 模板仓库](https://github.com/PotatoVN-Community/App.PluginBase) 并点击 "Use this template" -> "Create a new repository" 来创建一个你自己的插件项目。
 
 2. **克隆并初始化项目**:
     使用 Git 克隆你刚刚创建的仓库到本地。然后，在项目根目录运行以下命令来初始化并拉取 `git submodule` (应用公开库使用submodule挂载到插件中):
