@@ -2,7 +2,7 @@
 order: 3
 ---
 
-# 3.1 总述
+# 调用PotatoVN API
 
 调用 PotatoVN 应用本体提供的功能主要通过 `HostApi` 实现。
 
@@ -25,3 +25,4 @@ public class Plugin : IPlugin
     
     // ... other methods
 }
+```
