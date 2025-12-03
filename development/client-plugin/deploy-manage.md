@@ -13,7 +13,7 @@ order: 9
 在发布插件前，你需要在[PotatoVN 插件管理平台](https://plugin.api.potatovn.net/)上注册一个开发者账号，并创建你的插件项目。插件管理平台提供了上传、管理和发布插件的功能。
 
 推荐直接点击Login按钮，使用[PotatoVN账号](https://account.potatovn.net/oidc-login)（也就是软件内云同步的账号）登录插件管理平台~
-![](./images/depoly-manage-login.png)
+![](./images/deploy-manage-login.png)
 
 当然，不使用PotatoVN账号也可以，点击注册按钮，填写邮箱等信息注册一个新账号即可~
 
