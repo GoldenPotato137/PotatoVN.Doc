@@ -1,0 +1,7 @@
+﻿.vp-doc img.sponsor-logo {
+    height: var(--sponsor-logo-h, 80px) !important;
+    width: auto !important;
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+}

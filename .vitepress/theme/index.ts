@@ -7,6 +7,7 @@ import MsStoreBadge from './components/MsStoreBadge.vue'
 //   NolebaseGitChangelogPlugin
 // } from '@nolebase/vitepress-plugin-git-changelog/client'
 // import '@nolebase/vitepress-plugin-git-changelog/client/style.css'
+import './custom.css'
 
 export default {
   extends: DefaultTheme,
