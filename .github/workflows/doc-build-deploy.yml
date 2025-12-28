@@ -9,6 +9,7 @@ on:
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
+  packages: write
   pages: write
   id-token: write
 
@@ -17,6 +18,10 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
+env:
+  DOCKERHUB_IMAGE: goldenpotato137/potatovn.net:latest
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/potatovn.net:latest
 
 jobs:
   build:
@@ -40,10 +45,17 @@ jobs:
           npm run build
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
@@ -51,11 +63,12 @@ jobs:
       - name: Build & Push Docker image
         run: |
           cd .vitepress/dist
-          docker build --tag goldenpotato137/potatovn.net:latest .
-          docker push goldenpotato137/potatovn.net:latest
+          docker build --tag "$DOCKERHUB_IMAGE" --tag "$GHCR_IMAGE" .
+          docker push "$DOCKERHUB_IMAGE"
+          docker push "$GHCR_IMAGE"
 
       - name: Verify deployment
-        run: echo "The image has been successfully pushed to Docker Hub."
+        run: echo "The image has been successfully pushed to container registries."
 
   deploy-to-my-server:
     needs: build
@@ -71,16 +84,21 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan potatovn.net >> ~/.ssh/known_hosts
       - name: Deploy
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          IMAGE=${GHCR_IMAGE}
           ssh goldenpotato@potatovn.net "\
           echo 'Starting deployment...'; \
+          echo 'Login to GHCR...'; \
+          printf '%s' \"${GHCR_TOKEN}\" | docker login ghcr.io -u ${{ github.actor }} --password-stdin; \
           echo 'Pull new image...'; \
-          docker pull goldenpotato137/potatovn.net:latest; \
+          docker pull ${IMAGE}; \
           echo 'Stop old container...'; \
           docker stop potatovn.net; \
           echo 'Remove old container...'; \
           docker rm potatovn.net; \
           echo 'Run new container...'; \
-          docker run -d --name potatovn.net -p 9002:80 goldenpotato137/potatovn.net:latest; \
+          docker run -d --name potatovn.net -p 9002:80 ${IMAGE}; \
           echo 'Deployment completed.'; \
           "
