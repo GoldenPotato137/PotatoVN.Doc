@@ -21,7 +21,7 @@ concurrency:
 
 env:
   DOCKERHUB_IMAGE: goldenpotato137/potatovn.net:latest
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/potatovn.net:latest
+  GHCR_IMAGE: ghcr.io/goldenpotato137/potatovn.net:latest
 
 jobs:
   build:
