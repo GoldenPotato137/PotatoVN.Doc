@@ -57,11 +57,16 @@ order: 9
     "description_short": "这里的描述会被显示在插件列表的卡片里\n第二行描述~",
     "description_detailed": "这里的描述会被显示在点击插件卡片后弹出的插件详情对话框里\n第二行描述\n第三行描述",
     "icon": "icon.png",  //插件图标名，建议使用分辨率为256x256的png图片
+    "types": 0,  //插件类型，int32_t，按位标识。可使用类型计算器获取该值
     "developer": "开发者名称", //可以为空
     "developer_url": "https://开发者网址.com", //可以为空
     "project_url": "https://项目地址.com" //可以为空
 }
 ```
+
+:::tip
+`types` 字段表示插件的类型，是一个按位标识的 `int32_t` 值。你可以前往 [插件类型计算器](/development/client-plugin/type-calculator.html) 通过勾选类型来快速计算该值。
+:::
 
 完成插件信息`json`编写后，请把它命名为:`plugin-info.json`，并把它和插件图标文件一起上传到插件的`doc`包中（如下图所示）。
 
