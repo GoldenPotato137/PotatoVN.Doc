@@ -29,7 +29,7 @@ order: 2
 *   **功能实现**: 如果插件希望实现其他功能，请实现公开库中定义的各种功能接口。例如：
     *   实现 `IParserProvider` 接口表示插件能提供一个游戏数据搜刮器。
     *   实现 `IPluginSetting` 接口表示插件能提供一个设置 UI，应用会将其展示在插件管理界面（详见第五节）。
-*   **预设文件**: 项目中包含一些预设的 UI 控件（位于 `Controls/Prefabs` 文件夹下）以及 UI 注入所需的基础类（如`XamlResourceLocatorFactory.cs`）。
+*   **预设文件**: 项目中包含一些预设的 UI 控件（位于 `Controls/Prefabs` 文件夹下）以及 UI 注入所需的基础类（如 `XamlResourceLocatorFactory.cs`）。这些基础类用于让插件自己的 XAML、嵌套 `UserControl` 与资源文件在宿主中正确定位和加载。
 
 理论上，要让插件工作起来，只需要一个实现了 `IPlugin` 接口的主类即可。但为了更好的可维护性，我们强烈推荐你后续阅读下面的小节，了解插件开发的最佳实践。
 
