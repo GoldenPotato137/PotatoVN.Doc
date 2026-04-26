@@ -26,3 +26,22 @@ public class Plugin : IPlugin
     // ... other methods
 }
 ```
+
+## 页面跳转
+
+`HostApi` 现在支持两种导航方式：
+
+- `NavigateTo(PageEnum page, object? parameter = null)`：跳转到 PotatoVN 内置页面。
+- `NavigateTo(Type pageType, string? title = null, object? parameter = null, bool clearNavigation = false)`：跳转到当前插件自己的 `Page`。
+
+例如：
+
+```csharp
+HostApi?.NavigateTo(typeof(MyPluginPage), title: "My Plugin");
+```
+
+注意：
+
+1. `pageType` 必须是当前插件程序集里的 `Microsoft.UI.Xaml.Controls.Page` 类型。
+2. 如果不传 `title`，宿主会默认使用插件名作为页面标题。
+3. 如果你的插件页面使用 XAML，仍然要遵循 [插件UI](/development/client-plugin/ui.md) 中的 `XamlResourceLocatorFactory.PluginControlInit()` 约定。
