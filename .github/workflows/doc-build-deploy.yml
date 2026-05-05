@@ -6,12 +6,10 @@ on:
       - main
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Sets permissions of the GITHUB_TOKEN to allow pushing packages to GHCR
 permissions:
   contents: read
   packages: write
-  pages: write
-  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -23,19 +21,28 @@ env:
   DOCKERHUB_IMAGE: goldenpotato137/potatovn.net:latest
   GHCR_IMAGE: ghcr.io/goldenpotato137/potatovn.net:latest
 
+  IMAGE_TAR: potatovn-net-image.tar.gz
+
+  DEPLOY_HOST: potatovn.net
+  DEPLOY_USER: goldenpotato
+
+  CONTAINER_NAME: potatovn.net
+  HOST_PORT: 9002
+  CONTAINER_PORT: 80
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository master branch
-        uses: actions/checkout@master
-        with: 
-          fetch-depth: '0'
+      - name: Checkout Repository main branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
           ref: main
 
-      - name: Setup Node.js 10.x
-        uses: actions/setup-node@master
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -60,45 +67,99 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build & Push Docker image
+      - name: Build Docker image
         run: |
           cd .vitepress/dist
-          docker build --tag "$DOCKERHUB_IMAGE" --tag "$GHCR_IMAGE" .
+
+          docker build \
+            --tag "$DOCKERHUB_IMAGE" \
+            --tag "$GHCR_IMAGE" \
+            .
+
+      - name: Push Docker image to Docker Hub and GHCR
+        run: |
           docker push "$DOCKERHUB_IMAGE"
           docker push "$GHCR_IMAGE"
 
-      - name: Verify deployment
-        run: echo "The image has been successfully pushed to container registries."
+      - name: Save Docker image as tar.gz
+        run: |
+          docker save "$DOCKERHUB_IMAGE" "$GHCR_IMAGE" | gzip > "$IMAGE_TAR"
+
+          echo "Docker image archive generated:"
+          ls -lh "$IMAGE_TAR"
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: potatovn-net-docker-image
+          path: ${{ env.IMAGE_TAR }}
+          retention-days: 1
+
+      - name: Verify build and image push
+        run: |
+          echo "The image has been successfully pushed to container registries."
+          echo "Docker Hub image: $DOCKERHUB_IMAGE"
+          echo "GHCR image: $GHCR_IMAGE"
+          echo "Docker image archive: $IMAGE_TAR"
 
   deploy-to-my-server:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: potatovn-net-docker-image
+          path: .
+
       - name: Setup Private Key
         env:
           PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
           sudo timedatectl set-timezone "Asia/Shanghai"
-          mkdir -p ~/.ssh/
-          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa 
+
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan potatovn.net >> ~/.ssh/known_hosts
-      - name: Deploy
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload Docker image to server
         run: |
-          IMAGE=${GHCR_IMAGE}
-          ssh goldenpotato@potatovn.net "\
-          echo 'Starting deployment...'; \
-          echo 'Login to GHCR...'; \
-          printf '%s' \"${GHCR_TOKEN}\" | docker login ghcr.io -u ${{ github.actor }} --password-stdin; \
-          echo 'Pull new image...'; \
-          docker pull ${IMAGE}; \
-          echo 'Stop old container...'; \
-          docker stop potatovn.net; \
-          echo 'Remove old container...'; \
-          docker rm potatovn.net; \
-          echo 'Run new container...'; \
-          docker run -d --name potatovn.net -p 9002:80 ${IMAGE}; \
-          echo 'Deployment completed.'; \
+          echo "Uploading Docker image archive to server..."
+          ls -lh "$IMAGE_TAR"
+
+          scp "$IMAGE_TAR" "$DEPLOY_USER@$DEPLOY_HOST:/tmp/$IMAGE_TAR"
+
+      - name: Deploy on server
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "
+            set -e
+
+            echo 'Starting deployment...'
+
+            echo 'Loading Docker image from uploaded archive...'
+            gzip -dc /tmp/$IMAGE_TAR | docker load
+
+            echo 'Checking loaded images...'
+            docker images | grep 'potatovn.net' || true
+
+            echo 'Stop old container if exists...'
+            docker stop $CONTAINER_NAME || true
+
+            echo 'Remove old container if exists...'
+            docker rm $CONTAINER_NAME || true
+
+            echo 'Run new container...'
+            docker run -d \
+              --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              -p $HOST_PORT:$CONTAINER_PORT \
+              $GHCR_IMAGE
+
+            echo 'Cleaning uploaded image archive...'
+            rm -f /tmp/$IMAGE_TAR
+
+            echo 'Deployment completed.'
           "
