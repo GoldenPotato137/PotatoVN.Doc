@@ -68,3 +68,11 @@ public FrameworkElement CreateSettingUi()
 
 
 要将你创建的 UI 注入到应用中，请让你的插件主类实现各种 UI 相关的接口。例如，实现 `IPluginSetting` 接口，即可告诉 PotatoVN 你的插件提供了一个设置界面。应用随后会在插件管理页面中调用接口的获取UI的函数并展示这个 UI。
+
+游戏详情页支持三类 UI 接口：
+
+- `IGalgamePage`：提供完整自定义详情页，会替换原版详情页主体。
+- `IGalgamePageLeftPanel`：向原版详情页左侧面板追加 UI。
+- `IGalgamePageRightPanel`：向原版详情页右侧面板追加 UI。
+
+如果只是希望在原版详情页上展示少量信息，优先使用左右面板接口；只有需要完全控制详情页布局时才使用 `IGalgamePage`。
